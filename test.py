@@ -2,22 +2,18 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset
 
-train_dataset = TensorDataset(
-    # inputs
-    torch.tensor([
-        [0, 3, 4, 5, 6, 7, 1],
-        [0, 7, 6, 5, 4, 3, 1],
-        [3, 4, 5, 6, 7, 7, 1],
-        [7, 7, 6, 5, 4, 3, 1]
+inputs = torch.tensor([
+    [0, 3, 4, 5, 6, 7, 1],
+    [0, 7, 6, 5, 4, 3, 1],
+    [3, 4, 5, 6, 7, 7, 1],
+    [7, 7, 6, 5, 4, 3, 1]
+    ])
 
-    ]),
-    # outputs
-    torch.tensor([
-        [0],
-        [1],
-        [0],
-        [1]
-    ]))
+outputs = torch.tensor([[0], [1], [0], [1]])
+
+print(inputs.dtype, outputs.dtype)
+
+train_dataset = TensorDataset(inputs, outputs)
 
 test_dataset = train_dataset
 
