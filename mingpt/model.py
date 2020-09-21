@@ -22,8 +22,9 @@ class GPTConfig:
     resid_pdrop = 0.1
     attn_pdrop = 0.1
 
-    def __init__(self, vocab_size, block_size, **kwargs):
+    def __init__(self, vocab_size, n_outputs, block_size, **kwargs):
         self.vocab_size = vocab_size
+        self.n_outputs  = 2 # TMP ONLY binary classifier
         self.block_size = block_size
         for k,v in kwargs.items():
             setattr(self, k, v)
@@ -112,7 +113,7 @@ class GPT(nn.Module):
         self.blocks = nn.Sequential(*[Block(config) for _ in range(config.n_layer)])
         # decoder head
         self.ln_f = nn.LayerNorm(config.n_embd)
-        self.head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.head = nn.Linear(config.n_embd, config.n_outputs, bias=False)
 
         self.block_size = config.block_size
         self.apply(self._init_weights)
@@ -188,6 +189,8 @@ class GPT(nn.Module):
         x = self.blocks(x)
         x = self.ln_f(x)
         logits = self.head(x)
+        logits = logits[:, -1, :] # TMP only look at last token
+        #logits = torch.mean(logits, dim=-2) # TMP only look at last token
 
         # if we are given some desired targets also calculate the loss
         loss = None
