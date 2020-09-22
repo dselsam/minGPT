@@ -25,7 +25,7 @@ def train(filename):
     with open(filename, 'r') as f:
         for line in f.readlines():
             tokens    = line.strip().split(" ")
-            label     = int(tokens[0])
+            label     = 1 if tokens[0] == "T" else 0
             tokens    = [tok2int(token) for token in tokens[1:]]
             maxTokens = max(maxTokens, len(tokens))
             datapoints.append((tokens, label))
@@ -43,7 +43,7 @@ def train(filename):
 
     dataset = TensorDataset(inputs, outputs)
 
-    block_size=10
+    block_size=1000
     n_outputs = 2
     vocab_size = len(token2int) + 2
 
@@ -52,11 +52,18 @@ def train(filename):
     model = GPT(mconf)
 
     from mingpt.trainer import Trainer, TrainerConfig
-    tconf = TrainerConfig(max_epochs=1000, batch_size=256)
+
+    batch_size    = 64
+    max_epochs    = 5
+    learning_rate = 1e-4
+    ckpt_path     = "checkpoints/"
+
+    tconf = TrainerConfig(max_epochs=max_epochs, batch_size=batch_size, learning_rate=learning_rate, ckpt_path=ckpt_path)
     trainer = Trainer(model, dataset, dataset, tconf)
     trainer.train()
 
     torch.save(model.state_dict(), filename + ".trained")
 
 if __name__ == "__main__":
+    # torch.set_num_threads(1)
     train("dummy.out")

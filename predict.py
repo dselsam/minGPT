@@ -7,7 +7,7 @@ def predict(vfilename, wfilename, filename):
     with open(vfilename, 'rb') as f:
         (token2int, int2token) = pickle.load(f)
 
-    block_size=10
+    block_size=1000
     n_outputs = 2
     vocab_size = len(token2int) + 2
 
