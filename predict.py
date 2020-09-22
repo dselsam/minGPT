@@ -3,8 +3,8 @@ from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset
 import pickle
 
-def predict(vfilename, wfilename, filename):
-    with open(vfilename, 'rb') as f:
+def predict(vocab, checkpoint, infile, outfile):
+    with open(vocab, 'rb') as f:
         (token2int, int2token) = pickle.load(f)
 
     block_size=1000
@@ -15,7 +15,7 @@ def predict(vfilename, wfilename, filename):
     mconf = GPTConfig(vocab_size, n_outputs, block_size, n_layer=1, n_head=1, n_embd=32) # toy
     model = GPT(mconf)
 
-    model.load_state_dict(torch.load(wfilename))
+    model.load_state_dict(torch.load(checkpoint))
     model.eval()
 
     from mingpt.utils import predict
@@ -29,8 +29,8 @@ def predict(vfilename, wfilename, filename):
             int2token[i] = token
             return i
 
-    with open(filename + ".predict", "w") as out:
-        with open(filename, "r") as f:
+    with open(outfile, "w") as out:
+        with open(infile, "r") as f:
             for line in f.readlines():
                 tokens    = line.strip().split(" ")
                 ints      = [tok2int(token) for token in tokens]
@@ -41,4 +41,16 @@ def predict(vfilename, wfilename, filename):
                 out.write("\n")
 
 if __name__ == "__main__":
-    predict("dummy.out.vocab.pkl", "dummy.out.trained", "dummy.predict")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--infile", action="store", dest='infile', type=str, default='predict-in')
+    parser.add_argument("--outfile", action="store", dest='outfile', type=str, default='predict-out')
+    parser.add_argument("--vocab", action="store", dest='vocab', type=str, default='vocab.pkl')
+    parser.add_argument("--checkpoint", action="store", dest='checkpoint', type=str, default='checkpoints/default')
+
+    opts = parser.parse_args()
+
+    predict(vocab=opts.vocab,
+            checkpoint=opts.checkpoint,
+            infile=opts.infile,
+            outfile=opts.outfile)
