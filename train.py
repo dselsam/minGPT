@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import TensorDataset
 import pickle
+import random
 
 def train(filename):
     ## Super naive, just to get something off the ground
@@ -41,7 +42,11 @@ def train(filename):
     with open(filename + ".vocab.pkl", 'wb') as f:
         pickle.dump((token2int, int2token), f)
 
-    dataset = TensorDataset(inputs, outputs)
+    perm = torch.randperm(inputs.size()[0])
+    inputs, outputs = inputs[perm], outputs[perm]
+    
+    train_dataset = TensorDataset(inputs, outputs)
+    test_dataset  = TensorDataset(inputs[:1000, :], outputs[:1000, :])
 
     block_size=1000
     n_outputs = 2
@@ -53,13 +58,13 @@ def train(filename):
 
     from mingpt.trainer import Trainer, TrainerConfig
 
-    batch_size    = 64
-    max_epochs    = 5
+    batch_size    = 128
+    max_epochs    = 10
     learning_rate = 1e-4
-    ckpt_path     = "checkpoints/"
+    ckpt_path     = "checkpoints/run%d" % random.randint(1, 10000000)
 
     tconf = TrainerConfig(max_epochs=max_epochs, batch_size=batch_size, learning_rate=learning_rate, ckpt_path=ckpt_path)
-    trainer = Trainer(model, dataset, dataset, tconf)
+    trainer = Trainer(model, train_dataset, test_dataset, tconf)
     trainer.train()
 
     torch.save(model.state_dict(), filename + ".trained")
